@@ -1,3 +1,5 @@
+import CountUp from './CountUp'
+
 export default function StatCard({ titulo, valor, icono: Icono, destacada = false }) {
   return (
     <div className={`p-5 shadow-lg ${
@@ -15,7 +17,9 @@ export default function StatCard({ titulo, valor, icono: Icono, destacada = fals
           <Icono size={22} className="text-accent shrink-0" />
         )}
       </div>
-      <p className="text-4xl font-light">{valor}</p>
+      <p className="text-4xl font-light">
+        <CountUp to={valor} separator="." />
+      </p>
     </div>
   )
 }

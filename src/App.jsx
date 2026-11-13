@@ -22,8 +22,6 @@ const ESTADOS = {
 
 const ESTADOS_ACTIVOS = ['en_registro', 'enviado']
 
-const formatoNumero = new Intl.NumberFormat('es-EC')
-
 function formatearFecha(iso) {
   return new Date(iso)
     .toLocaleDateString('es-EC', { day: 'numeric', month: 'short', timeZone: 'UTC' })
@@ -91,7 +89,7 @@ export default function App() {
                 <StatCard
                   key={tarjeta.titulo}
                   {...tarjeta}
-                  valor={formatoNumero.format(tarjeta.valor ?? 0)}
+                  valor={tarjeta.valor ?? 0}
                 />
               ))}
             </div>
