@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'src/components/GlareHover.jsx']),
+  globalIgnores(['dist', 'src/components/GlareHover.jsx', 'src/components/Particles.jsx']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
