@@ -1,0 +1,15 @@
+@import "@fontsource/open-sans/400.css";
+@import "@fontsource/open-sans/600.css";
+@import "@fontsource/open-sans/700.css";
+@import "tailwindcss";
+
+@theme {
+  --color-navy-600: #1a4265;
+  --color-navy-700: #10365a;
+  --color-navy-800: #0d3357;
+  --color-navy-900: #0a2e52;
+  --color-accent: #ff9816; /*#10b981*/
+  --color-accent-light: #ffb715;
+  --color-panel: #eaedf2;
+  --font-sans: "Open Sans", sans-serif;
+}
