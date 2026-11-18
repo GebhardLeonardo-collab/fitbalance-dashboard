@@ -22,14 +22,9 @@ export default function BarChart({ meses = [], anioActual, anioAnterior }) {
 
   return (
     <div className="bg-white p-6 shadow-lg">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-semibold text-navy-900">Ciclos completados</h2>
-        <button className="bg-accent hover:bg-accent-light text-white text-xs font-semibold px-4 py-1.5 rounded-full transition-colors">
-          Ver detalle
-        </button>
-      </div>
+      <h2 className="font-semibold text-navy-900 mb-6">Ciclos completados</h2>
 
-      <div className="flex gap-6">
+      <div className="flex gap-3 sm:gap-6">
         <div className="flex flex-col justify-between h-48 pr-1 text-[11px] text-slate-400 shrink-0">
           {marcas.map((marca) => (
             <span key={marca}>{marca}</span>
@@ -44,7 +39,7 @@ export default function BarChart({ meses = [], anioActual, anioAnterior }) {
               ))}
             </div>
 
-            <div className="relative h-full flex items-end gap-3">
+            <div className="relative h-full flex items-end gap-1 sm:gap-3">
               {meses.map((dato) => (
                 <div key={dato.mes} className="flex-1 h-full flex items-end justify-center gap-1">
                   <div
@@ -60,7 +55,7 @@ export default function BarChart({ meses = [], anioActual, anioAnterior }) {
             </div>
           </div>
 
-          <div className="flex gap-3 mt-2">
+          <div className="flex gap-1 sm:gap-3 mt-2">
             {meses.map((dato) => (
               <span key={dato.mes} className="flex-1 text-center text-[10px] text-slate-400">
                 {dato.mes}

@@ -1,156 +1,70 @@
-import { useEffect, useState } from 'react'
-import { Users, RefreshCw, Handshake, UtensilsCrossed, Menu } from 'lucide-react'
-import Sidebar from './components/Sidebar'
-import StatCard from './components/StatCard'
-import BarChart from './components/BarChart'
-import { obtenerResumen } from './services/dashboardApi'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import Layout from './components/Layout'
+import Login from './pages/Login'
+import Registro from './pages/Registro'
+import CambiarPassword from './pages/CambiarPassword'
+import Dashboard from './pages/Dashboard'
+import Nutricionistas from './pages/Nutricionistas'
+import Alianzas from './pages/Alianzas'
+import Solicitudes from './pages/Solicitudes'
+import Clientes from './pages/Clientes'
+import MiCiclo from './pages/MiCiclo'
+import Notificaciones from './pages/Notificaciones'
+import { INICIO_POR_ROL, useSesion } from './context/useSesion'
 
-const OBJETIVOS = {
-  perder_peso: 'Pérdida de peso',
-  ganar_masa_muscular: 'Ganancia muscular',
-  mantener_peso: 'Mantener peso',
-  mejorar_salud: 'Mejorar salud',
+const inicioDe = (usuario) =>
+  usuario.debeCambiarPassword ? '/cambiar-password' : (INICIO_POR_ROL[usuario.rol] ?? '/notificaciones')
+
+function Publica({ children }) {
+  const { usuario } = useSesion()
+  if (usuario) return <Navigate to={inicioDe(usuario)} replace />
+  return children
 }
 
-const ESTADOS = {
-  en_registro: 'En registro',
-  enviado: 'Enviado',
-  evaluado: 'Evaluado',
-  vencido: 'Vencido',
-  cancelado: 'Cancelado',
+function Privada() {
+  const { usuario } = useSesion()
+  if (!usuario) return <Navigate to="/login" replace />
+  if (usuario.debeCambiarPassword) return <Navigate to="/cambiar-password" replace />
+  return <Layout />
 }
 
-const ESTADOS_ACTIVOS = ['en_registro', 'enviado']
+function SoloConPasswordTemporal() {
+  const { usuario } = useSesion()
+  if (!usuario) return <Navigate to="/login" replace />
+  if (!usuario.debeCambiarPassword) return <Navigate to={inicioDe(usuario)} replace />
+  return <CambiarPassword />
+}
 
-function formatearFecha(iso) {
-  return new Date(iso)
-    .toLocaleDateString('es-EC', { day: 'numeric', month: 'short', timeZone: 'UTC' })
-    .replace('.', '')
+function SoloRol({ roles, children }) {
+  const { usuario } = useSesion()
+  if (!roles.includes(usuario.rol)) return <Navigate to={inicioDe(usuario)} replace />
+  return children
 }
 
 export default function App() {
-  const [resumen, setResumen] = useState(null)
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState(null)
+  const { cargando } = useSesion()
 
-  useEffect(() => {
-    let activo = true
-
-    obtenerResumen()
-      .then((datos) => {
-        if (activo) setResumen(datos)
-      })
-      .catch((err) => {
-        if (activo) setError(err.message)
-      })
-      .finally(() => {
-        if (activo) setCargando(false)
-      })
-
-    return () => {
-      activo = false
-    }
-  }, [])
-
-  const tarjetas = resumen
-    ? [
-        { titulo: 'Clientes', valor: resumen.tarjetas.clientes, icono: Users, destacada: true },
-        { titulo: 'Ciclos en curso', valor: resumen.tarjetas.ciclosEnCurso, icono: RefreshCw },
-        { titulo: 'Alianzas activas', valor: resumen.tarjetas.alianzasActivas, icono: Handshake },
-        { titulo: 'Registros de comida', valor: resumen.tarjetas.registrosComida, icono: UtensilsCrossed },
-      ]
-    : []
+  if (cargando) {
+    return <div className="min-h-screen bg-panel p-8 text-sm text-slate-500">Cargando...</div>
+  }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <Sidebar />
+    <Routes>
+      <Route path="/login" element={<Publica><Login /></Publica>} />
+      <Route path="/registro" element={<Publica><Registro /></Publica>} />
+      <Route path="/cambiar-password" element={<SoloConPasswordTemporal />} />
 
-      <main className="flex-1 bg-panel p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl text-navy-900">Panel de FitBalance</h1>
-          <Menu size={28} className="text-navy-900" />
-        </div>
+      <Route element={<Privada />}>
+        <Route path="/" element={<SoloRol roles={['admin']}><Dashboard /></SoloRol>} />
+        <Route path="/nutricionistas" element={<SoloRol roles={['gym']}><Nutricionistas /></SoloRol>} />
+        <Route path="/solicitudes" element={<SoloRol roles={['nutricionista']}><Solicitudes /></SoloRol>} />
+        <Route path="/alianzas" element={<SoloRol roles={['gym', 'nutricionista']}><Alianzas /></SoloRol>} />
+        <Route path="/clientes" element={<SoloRol roles={['gym']}><Clientes /></SoloRol>} />
+        <Route path="/mi-ciclo" element={<SoloRol roles={['cliente']}><MiCiclo /></SoloRol>} />
+        <Route path="/notificaciones" element={<Notificaciones />} />
+      </Route>
 
-        {cargando && (
-          <div className="bg-white p-6 shadow-lg text-sm text-slate-500">Cargando...</div>
-        )}
-
-        {!cargando && error && (
-          <div className="bg-white p-6 shadow-lg">
-            <h2 className="font-semibold text-navy-900 mb-2">No se pudo cargar el panel</h2>
-            <p className="text-sm text-slate-500">{error}</p>
-          </div>
-        )}
-
-        {!cargando && resumen && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {tarjetas.map((tarjeta) => (
-                <StatCard
-                  key={tarjeta.titulo}
-                  {...tarjeta}
-                  valor={tarjeta.valor ?? 0}
-                />
-              ))}
-            </div>
-
-            <div className="mt-6">
-              <BarChart
-                meses={resumen.grafico.meses}
-                anioActual={resumen.grafico.anioActual}
-                anioAnterior={resumen.grafico.anioAnterior}
-              />
-            </div>
-
-            <div className="mt-6 bg-white p-6 shadow-lg">
-              <h2 className="font-semibold text-navy-900 mb-5">Ciclos recientes</h2>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-slate-200">
-                      <th className="pb-3 font-semibold">Cliente</th>
-                      <th className="pb-3 font-semibold">Objetivo</th>
-                      <th className="pb-3 font-semibold">Inicio</th>
-                      <th className="pb-3 font-semibold">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {resumen.ciclosRecientes.length === 0 && (
-                      <tr>
-                        <td colSpan={4} className="py-3 text-slate-500">
-                          No hay ciclos recientes.
-                        </td>
-                      </tr>
-                    )}
-                    {resumen.ciclosRecientes.map((ciclo) => (
-                      <tr
-                        key={ciclo.id}
-                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="py-3 font-semibold text-navy-900">{ciclo.cliente}</td>
-                        <td className="py-3 text-slate-600">
-                          {OBJETIVOS[ciclo.objetivo] ?? ciclo.objetivo}
-                        </td>
-                        <td className="py-3 text-slate-600">{formatearFecha(ciclo.fechaInicio)}</td>
-                        <td className="py-3">
-                          <span className={`px-2.5 py-1 text-xs font-semibold ${
-                            ESTADOS_ACTIVOS.includes(ciclo.estado)
-                              ? 'bg-accent/15 text-accent'
-                              : 'bg-navy-700/10 text-navy-700'
-                          }`}>
-                            {ESTADOS[ciclo.estado] ?? ciclo.estado}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

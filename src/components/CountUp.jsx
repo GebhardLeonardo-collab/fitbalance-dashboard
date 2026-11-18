@@ -1,5 +1,5 @@
-// Componente de terceros: CountUp de React Bits (variante JS + Tailwind).
-// Fuente: https://www.reactbits.dev/text-animations/count-up
+// Componente de terceros: CountUp de React Bits.
+
 
 'use client';
 

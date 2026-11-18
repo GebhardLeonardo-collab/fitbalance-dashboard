@@ -1,5 +1,5 @@
-// Componente de terceros: GlareHover de React Bits (variante JS + Tailwind).
-// Fuente: https://www.reactbits.dev/animations/glare-hover
+// Componente de terceros: GlareHover de React Bits.
+
 
 'use client';
 

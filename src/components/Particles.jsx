@@ -1,5 +1,4 @@
-// Componente de terceros: Particles de React Bits (variante JS + Tailwind).
-// Fuente: https://www.reactbits.dev/backgrounds/particles
+// Componente de terceros: Particles de React Bits.
 
 'use client';
 
