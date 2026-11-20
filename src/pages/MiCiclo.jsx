@@ -5,7 +5,8 @@ import ConfirmarAccion from '../components/ConfirmarAccion'
 import FotoRegistro from '../components/FotoRegistro'
 import RegistroFoto from '../components/RegistroFoto'
 import { listarClientes } from '../api/clientes'
-import { enviarCiclo } from '../api/ciclos'
+import VeredictoCiclo from '../components/VeredictoCiclo'
+import { enviarCiclo, obtenerCiclo } from '../api/ciclos'
 import { listarRegistros } from '../api/registros'
 import { CICLOS_EN_CURSO, ESTADOS_CICLO, TOTAL_REGISTROS, formatearDia } from '../utils/etiquetas'
 
@@ -22,7 +23,7 @@ const TEXTO_CERRADO = {
 }
 
 export default function MiCiclo() {
-  const [estado, setEstado] = useState({ cargando: true, error: null, ciclo: null, registros: [] })
+  const [estado, setEstado] = useState({ cargando: true, error: null, ciclo: null, registros: [], veredicto: null })
   const [abierta, setAbierta] = useState(null)
   const [confirmandoEnvio, setConfirmandoEnvio] = useState(false)
   const [enviando, setEnviando] = useState(false)
@@ -32,7 +33,8 @@ export default function MiCiclo() {
     try {
       const ciclo = (await listarClientes())[0]?.cicloActual ?? null
       const registros = ciclo ? await listarRegistros(ciclo.id) : []
-      setEstado({ cargando: false, error: null, ciclo, registros })
+      const veredicto = ciclo?.estado === 'evaluado' ? ((await obtenerCiclo(ciclo.id)).veredicto ?? null) : null
+      setEstado({ cargando: false, error: null, ciclo, registros, veredicto })
     } catch (err) {
       if (inicial) setEstado((actual) => ({ ...actual, cargando: false, error: err.message }))
       else setMensaje((actual) => actual ?? { tipo: 'error', texto: err.message })
@@ -120,7 +122,13 @@ export default function MiCiclo() {
               </div>
             </div>
 
-            {TEXTO_CERRADO[ciclo.estado] && <p className="mt-4 text-sm text-slate-600">{TEXTO_CERRADO[ciclo.estado]}</p>}
+            {estado.veredicto && (
+              <div className="mt-6 max-w-xl">
+                <VeredictoCiclo veredicto={estado.veredicto} />
+              </div>
+            )}
+
+            {TEXTO_CERRADO[ciclo.estado] &&<p className="mt-4 text-sm text-slate-600">{TEXTO_CERRADO[ciclo.estado]}</p>}
 
             <div className="mt-6 bg-white p-4 sm:p-6 shadow-lg overflow-x-auto">
               <div className="min-w-[480px] grid grid-cols-[5.5rem_repeat(3,minmax(0,1fr))] gap-3">
