@@ -7,11 +7,21 @@ const MAXIMO = 2000
 
 const campo = 'border border-slate-300 px-3 py-2 text-sm font-normal focus:outline-none focus:border-accent w-full'
 
-function CampoTexto({ etiqueta, valor, onChange }) {
+function CampoTexto({ etiqueta, requerido = false, valor, onChange }) {
   return (
     <label className="flex flex-col gap-1 text-sm text-navy-900">
-      {etiqueta} (opcional)
-      <textarea rows={4} maxLength={MAXIMO} value={valor} onChange={(e) => onChange(e.target.value)} className={campo} />
+      <span>
+        {etiqueta}
+        {requerido ? <span className="text-red-600" aria-hidden="true"> *</span> : ' (opcional)'}
+      </span>
+      <textarea
+        rows={4}
+        maxLength={MAXIMO}
+        aria-required={requerido}
+        value={valor}
+        onChange={(e) => onChange(e.target.value)}
+        className={campo}
+      />
       <span className="text-xs text-slate-500 self-end">
         {valor.length}/{MAXIMO}
       </span>
@@ -30,6 +40,7 @@ export default function FormularioVeredicto({ cicloId, onEmitido }) {
   function pedirConfirmacion(evento) {
     evento.preventDefault()
     if (!evaluacion) return setError('Elige una evaluación para emitir el veredicto.')
+    if (!observaciones.trim()) return setError('Escribe las observaciones para emitir el veredicto.')
     setError(null)
     setConfirmando(true)
   }
@@ -79,7 +90,7 @@ export default function FormularioVeredicto({ cicloId, onEmitido }) {
         </div>
       </fieldset>
 
-      <CampoTexto etiqueta="Observaciones" valor={observaciones} onChange={setObservaciones} />
+      <CampoTexto etiqueta="Observaciones" requerido valor={observaciones} onChange={setObservaciones} />
       <CampoTexto etiqueta="Sustituciones sugeridas" valor={sustituciones} onChange={setSustituciones} />
 
       <div>
