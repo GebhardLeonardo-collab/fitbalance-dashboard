@@ -9,4 +9,7 @@ export const obtenerImagen = (id) => pedir(`/api/registros-comida/${id}/imagen`,
 export const confirmarRegistro = (id, alimentos) =>
   pedir(`/api/registros-comida/${id}`, { metodo: 'PUT', cuerpo: { alimentos, confirmado: true } })
 
+export const estimarAlimentos = (id, alimentos) =>
+  pedir(`/api/registros-comida/${id}/estimar-alimentos`, { metodo: 'POST', cuerpo: { alimentos } })
+
 export const eliminarRegistro = (id) => pedir(`/api/registros-comida/${id}`, { metodo: 'DELETE' })

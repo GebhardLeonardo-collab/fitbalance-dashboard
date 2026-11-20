@@ -3,11 +3,12 @@ import { Plus, Trash2 } from 'lucide-react'
 import Modal from './Modal'
 import ConfirmarAccion from './ConfirmarAccion'
 import FotoRegistro from './FotoRegistro'
-import { confirmarRegistro, eliminarRegistro, subirRegistro } from '../api/registros'
+import { confirmarRegistro, eliminarRegistro, estimarAlimentos, subirRegistro } from '../api/registros'
 import { formatearDia } from '../utils/etiquetas'
 
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png']
 const MAXIMO_MB = 5
+const MAXIMO_POR_LLAMADA = 20
 const MACROS = [
   ['calorias', 'Calorías'],
   ['proteinas', 'Proteínas (g)'],
@@ -20,6 +21,8 @@ const hoy = () => {
   return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
 }
 
+const limpio = (texto) => (texto ?? '').trim()
+
 const desdeAlimento = (alimento) => ({
   nombre: alimento.nombre ?? '',
   porcion: alimento.porcion ?? '',
@@ -27,26 +30,35 @@ const desdeAlimento = (alimento) => ({
   proteinas: String(alimento.proteinas ?? 0),
   carbohidratos: String(alimento.carbohidratos ?? 0),
   grasas: String(alimento.grasas ?? 0),
+  original: { nombre: limpio(alimento.nombre), porcion: limpio(alimento.porcion) },
 })
 
-const alimentoVacio = () => desdeAlimento({})
+const alimentoNuevo = () => ({ ...desdeAlimento({}), original: null })
 
-function paraEnviar(alimentos) {
-  if (alimentos.length === 0) throw new Error('Agrega al menos un alimento para confirmar.')
-  return alimentos.map((alimento) => {
-    const nombre = alimento.nombre.trim()
-    if (!nombre) throw new Error('Cada alimento necesita un nombre.')
-    const enviado = { nombre }
-    if (alimento.porcion.trim()) enviado.porcion = alimento.porcion.trim()
-    for (const [campo] of MACROS) {
-      const valor = Number(alimento[campo] === '' ? 0 : alimento[campo])
-      if (!Number.isFinite(valor) || valor < 0) {
-        throw new Error('Calorías, proteínas, carbohidratos y grasas deben ser números mayores o iguales a 0.')
-      }
-      enviado[campo] = valor
+const porRecalcular = (fila) =>
+  !fila.original || limpio(fila.nombre) !== fila.original.nombre || limpio(fila.porcion) !== fila.original.porcion
+
+function paraEnviar(fila) {
+  const enviado = { nombre: limpio(fila.nombre) }
+  if (limpio(fila.porcion)) enviado.porcion = limpio(fila.porcion)
+  for (const [campo] of MACROS) {
+    const valor = Number(fila[campo] === '' ? 0 : fila[campo])
+    if (!Number.isFinite(valor) || valor < 0) {
+      throw new Error('Calorías, proteínas, carbohidratos y grasas deben ser números mayores o iguales a 0.')
     }
-    return enviado
-  })
+    enviado[campo] = valor
+  }
+  return enviado
+}
+
+async function estimarPorTandas(registroId, pedidos) {
+  const estimados = []
+  for (let desde = 0; desde < pedidos.length; desde += MAXIMO_POR_LLAMADA) {
+    const respuesta = await estimarAlimentos(registroId, pedidos.slice(desde, desde + MAXIMO_POR_LLAMADA))
+    estimados.push(...respuesta.alimentos)
+  }
+  if (estimados.length !== pedidos.length) throw new Error('No se pudieron calcular los valores, intenta de nuevo')
+  return estimados
 }
 
 const campo = 'border border-slate-300 px-2 py-1.5 text-sm font-normal focus:outline-none focus:border-accent w-full'
@@ -60,6 +72,7 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
   const [fecha, setFecha] = useState(hoy)
   const [error, setError] = useState(null)
   const [enviando, setEnviando] = useState(false)
+  const [calculando, setCalculando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
   const [confirmandoBorrado, setConfirmandoBorrado] = useState(false)
 
@@ -108,26 +121,52 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
   }
 
   function cambiarAlimento(indice, nombre, valor) {
-    setAlimentos((lista) => lista.map((alimento, i) => (i === indice ? { ...alimento, [nombre]: valor } : alimento)))
+    setAlimentos((lista) => lista.map((fila, i) => (i === indice ? { ...fila, [nombre]: valor } : fila)))
   }
 
   async function confirmar() {
     setError(null)
-    let datos
+    if (alimentos.length === 0) return setError('Agrega al menos un alimento para confirmar.')
+    if (alimentos.some((fila) => !limpio(fila.nombre))) return setError('Cada alimento necesita un nombre.')
     try {
-      datos = paraEnviar(alimentos)
+      alimentos.filter((fila) => !porRecalcular(fila)).forEach(paraEnviar)
     } catch (err) {
       return setError(err.message)
     }
+
+    const indices = alimentos.flatMap((fila, i) => (porRecalcular(fila) ? [i] : []))
     setEnviando(true)
+    setCalculando(indices.length > 0)
     try {
-      await confirmarRegistro(actual.id, datos)
+      let filas = alimentos
+      if (indices.length > 0) {
+        const pedidos = indices.map((i) => {
+          const pedido = { nombre: limpio(alimentos[i].nombre) }
+          if (limpio(alimentos[i].porcion)) pedido.porcion = limpio(alimentos[i].porcion)
+          return pedido
+        })
+        const estimados = await estimarPorTandas(actual.id, pedidos)
+        filas = alimentos.map((fila, i) => {
+          const k = indices.indexOf(i)
+          if (k === -1) return fila
+          const porcion = limpio(fila.porcion) || limpio(estimados[k].porcion)
+          return {
+            ...fila,
+            porcion,
+            ...Object.fromEntries(MACROS.map(([nombre]) => [nombre, String(estimados[k][nombre] ?? 0)])),
+            original: { nombre: limpio(fila.nombre), porcion },
+          }
+        })
+        setAlimentos(filas)
+      }
+      await confirmarRegistro(actual.id, filas.map(paraEnviar))
       onCambio()
       onCerrar()
     } catch (err) {
       setError(err.message)
       if (err.status === 409) onCambio()
       setEnviando(false)
+      setCalculando(false)
     }
   }
 
@@ -240,22 +279,17 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
                 <p className="text-sm text-slate-500">Esta foto no tiene alimentos registrados.</p>
               ) : (
                 <ul className="divide-y divide-slate-100 text-sm">
-                  {alimentos.map((alimento, indice) => (
-                    <li key={indice} className="py-2">
-                      <p className="font-semibold text-navy-900">
-                        {alimento.nombre}
-                        {alimento.porcion && <span className="font-normal text-slate-500"> · {alimento.porcion}</span>}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {alimento.calorias} kcal · P {alimento.proteinas} g · C {alimento.carbohidratos} g · G {alimento.grasas} g
-                      </p>
+                  {alimentos.map((fila, indice) => (
+                    <li key={indice} className="py-2 font-semibold text-navy-900">
+                      {fila.nombre}
+                      {limpio(fila.porcion) && <span className="font-normal text-slate-500"> · {limpio(fila.porcion)}</span>}
                     </li>
                   ))}
                 </ul>
               )
             ) : (
               <div className="flex flex-col gap-4">
-                {alimentos.map((alimento, indice) => (
+                {alimentos.map((fila, indice) => (
                   <div key={indice} className="border border-slate-200 p-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <label className="flex flex-col gap-1 text-xs text-navy-900">
@@ -263,7 +297,8 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
                         <input
                           type="text"
                           maxLength={120}
-                          value={alimento.nombre}
+                          disabled={enviando}
+                          value={fila.nombre}
                           onChange={(e) => cambiarAlimento(indice, 'nombre', e.target.value)}
                           className={campo}
                         />
@@ -273,31 +308,18 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
                         <input
                           type="text"
                           maxLength={60}
-                          value={alimento.porcion}
+                          disabled={enviando}
+                          value={fila.porcion}
                           onChange={(e) => cambiarAlimento(indice, 'porcion', e.target.value)}
                           className={campo}
                         />
                       </label>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-                      {MACROS.map(([nombre, etiqueta]) => (
-                        <label key={nombre} className="flex flex-col gap-1 text-xs text-navy-900">
-                          {etiqueta}
-                          <input
-                            type="number"
-                            min={0}
-                            step="any"
-                            value={alimento[nombre]}
-                            onChange={(e) => cambiarAlimento(indice, nombre, e.target.value)}
-                            className={campo}
-                          />
-                        </label>
-                      ))}
-                    </div>
                     <button
                       type="button"
+                      disabled={enviando}
                       onClick={() => setAlimentos((lista) => lista.filter((_, i) => i !== indice))}
-                      className="mt-3 flex items-center gap-1 text-xs font-semibold text-red-700 hover:underline"
+                      className="mt-3 flex items-center gap-1 text-xs font-semibold text-red-700 hover:underline disabled:opacity-50"
                     >
                       <Trash2 size={14} />
                       Quitar alimento
@@ -306,13 +328,56 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
                 ))}
                 <button
                   type="button"
-                  onClick={() => setAlimentos((lista) => [...lista, alimentoVacio()])}
-                  className="self-start flex items-center gap-1 text-sm font-semibold text-navy-700 hover:text-accent transition-colors"
+                  disabled={enviando}
+                  onClick={() => setAlimentos((lista) => [...lista, alimentoNuevo()])}
+                  className="self-start flex items-center gap-1 text-sm font-semibold text-navy-700 hover:text-accent transition-colors disabled:opacity-50"
                 >
                   <Plus size={16} />
                   Agregar alimento
                 </button>
               </div>
+            )}
+
+            {alimentos.length > 0 && (
+              <details className="mt-4 border border-slate-200">
+                <summary className="cursor-pointer select-none px-3 py-2 text-sm font-semibold text-navy-900">
+                  Valores estimados por la IA
+                </summary>
+                <div className="px-3 pb-3">
+                  <p className="text-xs text-slate-500 mb-3">Son estimaciones; se recalculan si cambias el nombre o la porción.</p>
+                  <div className="flex flex-col gap-3">
+                    {alimentos.map((fila, indice) => (
+                      <div key={indice} className="border-t border-slate-100 pt-3">
+                        <p className="text-sm font-semibold text-navy-900 mb-2">{limpio(fila.nombre) || 'Sin nombre'}</p>
+                        {soloLectura ? (
+                          <p className="text-xs text-slate-500">
+                            {fila.calorias} kcal · P {fila.proteinas} g · C {fila.carbohidratos} g · G {fila.grasas} g
+                          </p>
+                        ) : porRecalcular(fila) ? (
+                          <p className="text-xs text-slate-500 italic">Se calculará al confirmar</p>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {MACROS.map(([nombre, etiqueta]) => (
+                              <label key={nombre} className="flex flex-col gap-1 text-xs text-navy-900">
+                                {etiqueta}
+                                <input
+                                  type="number"
+                                  min={0}
+                                  step="any"
+                                  disabled={enviando}
+                                  value={fila[nombre]}
+                                  onChange={(e) => cambiarAlimento(indice, nombre, e.target.value)}
+                                  className={campo}
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </details>
             )}
           </div>
 
@@ -340,7 +405,7 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
                   onClick={confirmar}
                   className="bg-accent hover:bg-accent-light disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 transition-colors"
                 >
-                  {enviando ? 'Confirmando...' : 'Confirmar'}
+                  {enviando ? (calculando ? 'Calculando valores...' : 'Confirmando...') : 'Confirmar'}
                 </button>
               )}
             </div>
