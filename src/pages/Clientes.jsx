@@ -4,7 +4,7 @@ import Estado from '../components/Estado'
 import ConfirmarAccion from '../components/ConfirmarAccion'
 import NuevoCliente from '../components/NuevoCliente'
 import { listarClientes } from '../api/clientes'
-import { abrirCiclo } from '../api/ciclos'
+import { abrirCiclo, cancelarCiclo } from '../api/ciclos'
 import { CICLOS_EN_CURSO, ESTADOS_CICLO, OBJETIVOS, TOTAL_REGISTROS } from '../utils/etiquetas'
 
 const estiloBoton =
@@ -14,6 +14,7 @@ export default function Clientes() {
   const [estado, setEstado] = useState({ cargando: true, error: null, datos: [] })
   const [creando, setCreando] = useState(false)
   const [aAbrir, setAAbrir] = useState(null)
+  const [aCancelar, setACancelar] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
 
@@ -41,6 +42,21 @@ export default function Clientes() {
     } finally {
       setEnviando(false)
       setAAbrir(null)
+    }
+  }
+
+  async function confirmarCancelacion() {
+    setEnviando(true)
+    setMensaje(null)
+    try {
+      await cancelarCiclo(aCancelar.cicloActual.id)
+      setMensaje({ tipo: 'exito', texto: `Ciclo cancelado para ${aCancelar.usuario?.nombre ?? 'el cliente'}.` })
+      await cargar()
+    } catch (err) {
+      setMensaje({ tipo: 'error', texto: err.message })
+    } finally {
+      setEnviando(false)
+      setACancelar(null)
     }
   }
 
@@ -127,6 +143,15 @@ export default function Clientes() {
                           Abrir ciclo
                         </button>
                       )}
+                      {enCurso && (
+                        <button
+                          type="button"
+                          onClick={() => setACancelar(cliente)}
+                          className="border border-red-600 text-red-700 hover:bg-red-600 hover:text-white text-xs font-semibold px-3 py-1.5 transition-colors"
+                        >
+                          Cancelar ciclo
+                        </button>
+                      )}
                     </td>
                   </tr>
                 )
@@ -137,6 +162,18 @@ export default function Clientes() {
       </Estado>
 
       {creando && <NuevoCliente onCerrar={() => setCreando(false)} onCreado={clienteCreado} />}
+
+      {aCancelar && (
+        <ConfirmarAccion
+          titulo={`¿Cancelar el ciclo de ${aCancelar.usuario?.nombre ?? 'el cliente'}?`}
+          mensaje="El cliente ya no podrá registrar ni enviar sus comidas en este ciclo. Esta acción no se puede deshacer."
+          textoConfirmar="Sí, cancelar ciclo"
+          advertencia
+          enviando={enviando}
+          onConfirmar={confirmarCancelacion}
+          onCerrar={() => setACancelar(null)}
+        />
+      )}
 
       {aAbrir && (
         <ConfirmarAccion

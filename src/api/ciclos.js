@@ -6,6 +6,8 @@ export const enviarCiclo = (id) => pedir(`/api/ciclos/${id}`, { metodo: 'PUT', c
 
 export const obtenerCiclo = (id) => pedir(`/api/ciclos/${id}`)
 
+export const cancelarCiclo = (id) => pedir(`/api/ciclos/${id}`, { metodo: 'PUT', cuerpo: { estado: 'cancelado' } })
+
 export const emitirVeredicto = (id, veredicto) =>
   pedir(`/api/ciclos/${id}`, { metodo: 'PUT', cuerpo: { estado: 'evaluado', veredicto } })
 
