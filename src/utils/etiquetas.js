@@ -19,3 +19,21 @@ export const TOTAL_REGISTROS = 9
 
 export const formatearDia = (iso) =>
   new Date(iso).toLocaleDateString('es-EC', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).replace('.', '')
+
+export const EVALUACIONES = {
+  excelente: 'Excelente',
+  bueno: 'Bueno',
+  regular: 'Regular',
+  deficiente: 'Deficiente',
+}
+
+export const FRECUENCIAS = {
+  quincenal: 'Quincenal (15 días)',
+  mensual: 'Mensual (30 días)',
+}
+
+export const COMIDAS = [
+  ['desayuno', 'Desayuno'],
+  ['almuerzo', 'Almuerzo'],
+  ['cena', 'Cena'],
+]

@@ -8,6 +8,8 @@ import Nutricionistas from './pages/Nutricionistas'
 import Alianzas from './pages/Alianzas'
 import Solicitudes from './pages/Solicitudes'
 import Clientes from './pages/Clientes'
+import MisClientes from './pages/MisClientes'
+import ClienteDetalle from './pages/ClienteDetalle'
 import MiCiclo from './pages/MiCiclo'
 import Notificaciones from './pages/Notificaciones'
 import { INICIO_POR_ROL, useSesion } from './context/useSesion'
@@ -60,6 +62,8 @@ export default function App() {
         <Route path="/solicitudes" element={<SoloRol roles={['nutricionista']}><Solicitudes /></SoloRol>} />
         <Route path="/alianzas" element={<SoloRol roles={['gym', 'nutricionista']}><Alianzas /></SoloRol>} />
         <Route path="/clientes" element={<SoloRol roles={['gym']}><Clientes /></SoloRol>} />
+        <Route path="/mis-clientes" element={<SoloRol roles={['nutricionista']}><MisClientes /></SoloRol>} />
+        <Route path="/mis-clientes/:id" element={<SoloRol roles={['nutricionista']}><ClienteDetalle /></SoloRol>} />
         <Route path="/mi-ciclo" element={<SoloRol roles={['cliente']}><MiCiclo /></SoloRol>} />
         <Route path="/notificaciones" element={<Notificaciones />} />
       </Route>
