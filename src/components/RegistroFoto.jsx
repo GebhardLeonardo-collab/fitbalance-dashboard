@@ -77,7 +77,8 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
   const [confirmandoBorrado, setConfirmandoBorrado] = useState(false)
 
   const minimo = new Date(fechaInicio).toISOString().slice(0, 10)
-  const soloLectura = !editable || Boolean(actual?.confirmado)
+  const soloLectura = !editable
+  const yaConfirmado = Boolean(actual?.confirmado)
 
   function elegirArchivo(evento) {
     const elegido = evento.target.files?.[0] ?? null
@@ -405,7 +406,15 @@ export default function RegistroFoto({ titulo, cicloId, dia, tipoComida, fechaIn
                   onClick={confirmar}
                   className="bg-accent hover:bg-accent-light disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 transition-colors"
                 >
-                  {enviando ? (calculando ? 'Calculando valores...' : 'Confirmando...') : 'Confirmar'}
+                  {enviando
+                    ? calculando
+                      ? 'Calculando valores...'
+                      : yaConfirmado
+                        ? 'Guardando...'
+                        : 'Confirmando...'
+                    : yaConfirmado
+                      ? 'Guardar cambios'
+                      : 'Confirmar'}
                 </button>
               )}
             </div>
