@@ -4,4 +4,4 @@ export const SesionContext = createContext(null)
 
 export const useSesion = () => useContext(SesionContext)
 
-export const INICIO_POR_ROL = { admin: '/', gym: '/nutricionistas', nutricionista: '/solicitudes', cliente: '/mi-ciclo' }
+export const INICIO_POR_ROL = { admin: '/', gym: '/', nutricionista: '/', cliente: '/' }

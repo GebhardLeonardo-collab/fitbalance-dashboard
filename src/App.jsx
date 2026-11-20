@@ -4,6 +4,9 @@ import Login from './pages/Login'
 import Registro from './pages/Registro'
 import CambiarPassword from './pages/CambiarPassword'
 import Dashboard from './pages/Dashboard'
+import InicioGimnasio from './pages/InicioGimnasio'
+import InicioNutricionista from './pages/InicioNutricionista'
+import InicioCliente from './pages/InicioCliente'
 import Nutricionistas from './pages/Nutricionistas'
 import Alianzas from './pages/Alianzas'
 import Solicitudes from './pages/Solicitudes'
@@ -37,6 +40,15 @@ function SoloConPasswordTemporal() {
   return <CambiarPassword />
 }
 
+const INICIOS = { admin: Dashboard, gym: InicioGimnasio, nutricionista: InicioNutricionista, cliente: InicioCliente }
+
+function Inicio() {
+  const { usuario } = useSesion()
+  const Pantalla = INICIOS[usuario.rol]
+  if (!Pantalla) return <Navigate to="/notificaciones" replace />
+  return <Pantalla />
+}
+
 function SoloRol({ roles, children }) {
   const { usuario } = useSesion()
   if (!roles.includes(usuario.rol)) return <Navigate to={inicioDe(usuario)} replace />
@@ -57,7 +69,7 @@ export default function App() {
       <Route path="/cambiar-password" element={<SoloConPasswordTemporal />} />
 
       <Route element={<Privada />}>
-        <Route path="/" element={<SoloRol roles={['admin']}><Dashboard /></SoloRol>} />
+        <Route path="/" element={<Inicio />} />
         <Route path="/nutricionistas" element={<SoloRol roles={['gym']}><Nutricionistas /></SoloRol>} />
         <Route path="/solicitudes" element={<SoloRol roles={['nutricionista']}><Solicitudes /></SoloRol>} />
         <Route path="/alianzas" element={<SoloRol roles={['gym', 'nutricionista']}><Alianzas /></SoloRol>} />

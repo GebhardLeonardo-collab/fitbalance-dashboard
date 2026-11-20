@@ -5,16 +5,20 @@ import { useSesion } from '../context/useSesion'
 
 const NOTIFICACIONES = { nombre: 'Notificaciones', ruta: '/notificaciones', icono: Bell }
 
+const INICIO = { nombre: 'Inicio', ruta: '/', icono: LayoutDashboard }
+
 const ENLACES_POR_ROL = {
-  admin: [{ nombre: 'Inicio', ruta: '/', icono: LayoutDashboard }, NOTIFICACIONES],
+  admin: [INICIO, NOTIFICACIONES],
   gym: [
+    INICIO,
     { nombre: 'Nutricionistas', ruta: '/nutricionistas', icono: Stethoscope },
     { nombre: 'Mis alianzas', ruta: '/alianzas', icono: Handshake },
     { nombre: 'Clientes', ruta: '/clientes', icono: Users },
     NOTIFICACIONES,
   ],
-  cliente: [{ nombre: 'Mi ciclo', ruta: '/mi-ciclo', icono: RefreshCw }, NOTIFICACIONES],
+  cliente: [INICIO, { nombre: 'Mi ciclo', ruta: '/mi-ciclo', icono: RefreshCw }, NOTIFICACIONES],
   nutricionista: [
+    INICIO,
     { nombre: 'Solicitudes', ruta: '/solicitudes', icono: Inbox },
     { nombre: 'Mis alianzas', ruta: '/alianzas', icono: Handshake },
     { nombre: 'Mis clientes', ruta: '/mis-clientes', icono: UserCheck },
