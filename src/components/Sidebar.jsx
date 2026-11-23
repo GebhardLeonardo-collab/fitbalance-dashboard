@@ -1,7 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Handshake, Bell, Inbox, Stethoscope, Users, UserCheck, RefreshCw, User, LogOut, X, KeyRound } from 'lucide-react'
+import { LayoutDashboard, Handshake, Bell, Inbox, Stethoscope, Users, UserCheck, RefreshCw, User, LogOut, X, KeyRound, ShieldCheck } from 'lucide-react'
 import Particles from './Particles'
 import { useSesion } from '../context/useSesion'
+import { useNoLeidas } from '../utils/useNoLeidas'
 
 const NOTIFICACIONES = { nombre: 'Notificaciones', ruta: '/notificaciones', icono: Bell }
 
@@ -10,7 +11,7 @@ const CAMBIAR_PASSWORD = { nombre: 'Cambiar contraseña', ruta: '/cuenta/passwor
 const INICIO = { nombre: 'Inicio', ruta: '/', icono: LayoutDashboard }
 
 const ENLACES_POR_ROL = {
-  admin: [INICIO, NOTIFICACIONES],
+  admin: [INICIO, { nombre: 'Aprobación de cuentas', ruta: '/aprobacion-cuentas', icono: ShieldCheck }, NOTIFICACIONES],
   gym: [
     INICIO,
     { nombre: 'Nutricionistas', ruta: '/nutricionistas', icono: Stethoscope },
@@ -34,6 +35,7 @@ const estiloFondo = { position: 'absolute', inset: 0, zIndex: -1, pointerEvents:
 
 export default function Sidebar({ abierto, onCerrar }) {
   const { usuario, cerrarSesion } = useSesion()
+  const noLeidas = useNoLeidas()
   const enlaces = [...(ENLACES_POR_ROL[usuario.rol] ?? [NOTIFICACIONES]), CAMBIAR_PASSWORD]
 
   return (
@@ -96,6 +98,14 @@ export default function Sidebar({ abierto, onCerrar }) {
             >
               <enlace.icono size={20} />
               {enlace.nombre}
+              {enlace.ruta === NOTIFICACIONES.ruta && noLeidas > 0 && (
+                <span
+                  aria-label={`${noLeidas} sin leer`}
+                  className="ml-auto min-w-5 h-5 px-1 rounded-full bg-accent text-white text-[11px] font-semibold flex items-center justify-center"
+                >
+                  {noLeidas > 99 ? '99+' : noLeidas}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

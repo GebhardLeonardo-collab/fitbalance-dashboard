@@ -3,6 +3,8 @@ import { Plus } from 'lucide-react'
 import Estado from '../components/Estado'
 import ConfirmarAccion from '../components/ConfirmarAccion'
 import NuevoCliente from '../components/NuevoCliente'
+import BuscadorClientes from '../components/BuscadorClientes'
+import { filtrarClientes } from '../utils/busqueda'
 import { listarClientes } from '../api/clientes'
 import { abrirCiclo, cancelarCiclo } from '../api/ciclos'
 import { CICLOS_EN_CURSO, ESTADOS_CICLO, OBJETIVOS, TOTAL_REGISTROS } from '../utils/etiquetas'
@@ -17,6 +19,7 @@ export default function Clientes() {
   const [aCancelar, setACancelar] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
+  const [busqueda, setBusqueda] = useState('')
 
   const cargar = useCallback(
     () =>
@@ -60,6 +63,8 @@ export default function Clientes() {
     }
   }
 
+  const visibles = filtrarClientes(estado.datos, busqueda)
+
   function clienteCreado() {
     setCreando(false)
     setMensaje({ tipo: 'exito', texto: 'Cliente creado.' })
@@ -90,12 +95,17 @@ export default function Clientes() {
         </p>
       )}
 
+      {estado.datos.length > 0 && <BuscadorClientes valor={busqueda} onCambiar={setBusqueda} />}
+
       <Estado
         cargando={estado.cargando}
         error={estado.error}
         vacio={estado.datos.length === 0}
         textoVacio="Todavía no tienes clientes."
       >
+        {visibles.length === 0 ? (
+          <div className="bg-white p-6 shadow-lg text-sm text-slate-500">No se encontraron clientes</div>
+        ) : (
         <div className="bg-white p-6 shadow-lg overflow-x-auto">
           <table className="w-full text-sm min-w-[720px]">
             <thead>
@@ -108,7 +118,7 @@ export default function Clientes() {
               </tr>
             </thead>
             <tbody>
-              {estado.datos.map((cliente) => {
+              {visibles.map((cliente) => {
                 const ciclo = cliente.cicloActual
                 const enCurso = Boolean(ciclo) && CICLOS_EN_CURSO.includes(ciclo.estado)
                 return (
@@ -159,6 +169,7 @@ export default function Clientes() {
             </tbody>
           </table>
         </div>
+        )}
       </Estado>
 
       {creando && <NuevoCliente onCerrar={() => setCreando(false)} onCreado={clienteCreado} />}

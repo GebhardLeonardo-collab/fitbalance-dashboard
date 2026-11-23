@@ -12,6 +12,7 @@ import InicioCliente from './pages/InicioCliente'
 import Nutricionistas from './pages/Nutricionistas'
 import Alianzas from './pages/Alianzas'
 import Solicitudes from './pages/Solicitudes'
+import AprobacionCuentas from './pages/AprobacionCuentas'
 import Clientes from './pages/Clientes'
 import MisClientes from './pages/MisClientes'
 import ClienteDetalle from './pages/ClienteDetalle'
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="/" element={<Inicio />} />
         <Route path="/nutricionistas" element={<SoloRol roles={['gym']}><Nutricionistas /></SoloRol>} />
         <Route path="/solicitudes" element={<SoloRol roles={['nutricionista']}><Solicitudes /></SoloRol>} />
+        <Route path="/aprobacion-cuentas" element={<SoloRol roles={['admin']}><AprobacionCuentas /></SoloRol>} />
         <Route path="/alianzas" element={<SoloRol roles={['gym', 'nutricionista']}><Alianzas /></SoloRol>} />
         <Route path="/clientes" element={<SoloRol roles={['gym']}><Clientes /></SoloRol>} />
         <Route path="/mis-clientes" element={<SoloRol roles={['nutricionista']}><MisClientes /></SoloRol>} />

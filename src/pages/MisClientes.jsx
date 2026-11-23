@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Estado from '../components/Estado'
+import BuscadorClientes from '../components/BuscadorClientes'
+import { filtrarClientes } from '../utils/busqueda'
 import { listarClientes } from '../api/clientes'
 import { CICLOS_EN_CURSO, ESTADOS_CICLO } from '../utils/etiquetas'
 
 export default function MisClientes() {
   const [estado, setEstado] = useState({ cargando: true, error: null, datos: [] })
+  const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
     let activo = true
@@ -21,9 +24,13 @@ export default function MisClientes() {
     }
   }, [])
 
+  const visibles = filtrarClientes(estado.datos, busqueda)
+
   return (
     <>
       <h1 className="text-2xl text-navy-900 mb-6">Mis clientes</h1>
+
+      {estado.datos.length > 0 && <BuscadorClientes valor={busqueda} onCambiar={setBusqueda} />}
 
       <Estado
         cargando={estado.cargando}
@@ -31,6 +38,9 @@ export default function MisClientes() {
         vacio={estado.datos.length === 0}
         textoVacio="Todavía no hay clientes en los gimnasios con los que tienes una alianza aceptada."
       >
+        {visibles.length === 0 ? (
+          <div className="bg-white p-6 shadow-lg text-sm text-slate-500">No se encontraron clientes</div>
+        ) : (
         <div className="bg-white p-6 shadow-lg overflow-x-auto">
           <table className="w-full text-sm min-w-[620px]">
             <thead>
@@ -42,7 +52,7 @@ export default function MisClientes() {
               </tr>
             </thead>
             <tbody>
-              {estado.datos.map((cliente) => {
+              {visibles.map((cliente) => {
                 const ciclo = cliente.cicloActual
                 return (
                   <tr key={cliente.id} className="border-b border-slate-100">
@@ -78,6 +88,7 @@ export default function MisClientes() {
             </tbody>
           </table>
         </div>
+        )}
       </Estado>
     </>
   )

@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Bell } from 'lucide-react'
 import { EVENTO_NOTIFICACIONES, contarNoLeidas } from '../api/notificaciones'
 
 const INTERVALO_MS = 30000
 
-export default function Campana() {
+export function useNoLeidas() {
   const [noLeidas, setNoLeidas] = useState(0)
 
   useEffect(() => {
@@ -33,18 +31,5 @@ export default function Campana() {
     }
   }, [])
 
-  return (
-    <Link
-      to="/notificaciones"
-      aria-label={`Notificaciones: ${noLeidas} sin leer`}
-      className="relative p-2 text-navy-900 hover:text-accent transition-colors"
-    >
-      <Bell size={26} />
-      {noLeidas > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full bg-accent text-white text-[11px] font-semibold flex items-center justify-center">
-          {noLeidas > 99 ? '99+' : noLeidas}
-        </span>
-      )}
-    </Link>
-  )
+  return noLeidas
 }
