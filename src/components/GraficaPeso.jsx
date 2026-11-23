@@ -10,8 +10,9 @@ export default function GraficaPeso({ pesos = [], cambiosObjetivo = [] }) {
   if (pesos.length === 0) return null
 
   const tiempos = pesos.map((p) => new Date(p.fecha).getTime())
-  const inicio = Math.min(...tiempos)
-  const fin = Math.max(...tiempos)
+  const tiemposCambios = cambiosObjetivo.map((c) => new Date(c.fecha).getTime())
+  const inicio = Math.min(...tiempos, ...tiemposCambios)
+  const fin = Math.max(...tiempos, ...tiemposCambios)
   const valores = pesos.map((p) => p.pesoKg)
   let minimo = Math.floor(Math.min(...valores) - 1)
   let maximo = Math.ceil(Math.max(...valores) + 1)
@@ -31,7 +32,7 @@ export default function GraficaPeso({ pesos = [], cambiosObjetivo = [] }) {
   const marcasX = fin === inicio ? [inicio] : [inicio, inicio + (fin - inicio) / 2, fin]
   const cambios = cambiosObjetivo.map((c) => ({
     ...c,
-    cx: x(Math.min(Math.max(new Date(c.fecha).getTime(), inicio), fin)),
+    cx: x(new Date(c.fecha).getTime()),
   }))
 
   return (
