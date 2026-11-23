@@ -2,11 +2,12 @@ import { useState } from 'react'
 import Modal from './Modal'
 import { crearCliente } from '../api/clientes'
 import { OBJETIVOS } from '../utils/etiquetas'
+import { rangoFechaNacimiento, validarFechaNacimiento } from '../utils/validaciones'
 
-const hoy = () => {
-  const fecha = new Date()
-  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
-}
+const PESO_MINIMO = 30
+const PESO_MAXIMO = 300
+const ESTATURA_MINIMA_M = 1.2
+const ESTATURA_MAXIMA_M = 2.3
 
 const VACIO = {
   nombre: '',
@@ -19,13 +20,13 @@ const VACIO = {
   consentimiento: false,
 }
 
-const MENSAJE_ESTATURA = 'Ingresa la estatura en metros, por ejemplo 1.75'
+const MENSAJE_ESTATURA = 'Ingresa la estatura en metros, entre 1.20 y 2.30, por ejemplo 1.75'
 
 function estaturaEnMetros(texto) {
   const normalizado = texto.trim().replace(',', '.')
   if (!/^\d*\.?\d+$/.test(normalizado)) return null
   const metros = Number(normalizado)
-  return metros >= 0.3 && metros <= 3 ? metros : null
+  return metros >= ESTATURA_MINIMA_M && metros <= ESTATURA_MAXIMA_M ? metros : null
 }
 
 const campo = 'border border-slate-300 px-3 py-2 text-sm font-normal focus:outline-none focus:border-accent'
@@ -35,6 +36,7 @@ export default function NuevoCliente({ onCerrar, onCreado }) {
   const [valores, setValores] = useState(VACIO)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState(null)
+  const rangoNacimiento = rangoFechaNacimiento()
 
   const cambiar = (nombre) => (evento) =>
     setValores((actuales) => ({
@@ -45,6 +47,10 @@ export default function NuevoCliente({ onCerrar, onCreado }) {
   async function enviar(evento) {
     evento.preventDefault()
     if (!valores.consentimiento) return setError('Debes confirmar que el cliente acepta el tratamiento de sus datos.')
+    const errorFecha = validarFechaNacimiento(valores.fechaNacimiento)
+    if (errorFecha) return setError(errorFecha)
+    const peso = Number(valores.pesoKg)
+    if (!(peso >= PESO_MINIMO && peso <= PESO_MAXIMO)) return setError(`El peso debe estar entre ${PESO_MINIMO} y ${PESO_MAXIMO} kg.`)
     const metros = estaturaEnMetros(valores.estaturaM)
     if (metros === null) return setError(MENSAJE_ESTATURA)
     setEnviando(true)
@@ -54,11 +60,11 @@ export default function NuevoCliente({ onCerrar, onCreado }) {
       email: valores.email.trim(),
       passwordTemporal: valores.passwordTemporal,
       consentimiento: true,
-      pesoKg: Number(valores.pesoKg),
+      fechaNacimiento: valores.fechaNacimiento,
+      pesoKg: peso,
       estaturaCm: Math.round(metros * 100),
       objetivo: valores.objetivo,
     }
-    if (valores.fechaNacimiento) datos.fechaNacimiento = valores.fechaNacimiento
     try {
       await crearCliente(datos)
       onCreado()
@@ -101,8 +107,8 @@ export default function NuevoCliente({ onCerrar, onCreado }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <label className={etiqueta}>
-            Fecha de nacimiento (opcional)
-            <input type="date" max={hoy()} value={valores.fechaNacimiento} onChange={cambiar('fechaNacimiento')} className={campo} />
+            Fecha de nacimiento
+            <input type="date" required min={rangoNacimiento.minima} max={rangoNacimiento.maxima} value={valores.fechaNacimiento} onChange={cambiar('fechaNacimiento')} className={campo} />
           </label>
           <label className={etiqueta}>
             Objetivo
@@ -117,7 +123,7 @@ export default function NuevoCliente({ onCerrar, onCreado }) {
           </label>
           <label className={etiqueta}>
             Peso (kg)
-            <input type="number" required min={1} max={500} step="any" value={valores.pesoKg} onChange={cambiar('pesoKg')} className={campo} />
+            <input type="number" required min={PESO_MINIMO} max={PESO_MAXIMO} step="any" value={valores.pesoKg} onChange={cambiar('pesoKg')} className={campo} />
           </label>
           <label className={etiqueta}>
             Estatura (m)

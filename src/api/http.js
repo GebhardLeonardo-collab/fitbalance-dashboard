@@ -1,5 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL
 const CLAVE_TOKEN = 'fitbalance.token'
+const CODIGO_PASSWORD_INCORRECTA = 'PASSWORD_ACTUAL_INCORRECTA'
 
 let alPerderSesion = () => {}
 
@@ -58,7 +59,8 @@ export async function pedir(ruta, { metodo = 'GET', cuerpo, publica = false, blo
   if (respuesta.ok) return datos
 
   const mensaje = datos?.message ?? `Error ${respuesta.status} del servidor`
-  if (respuesta.status === 401 && !publica) alPerderSesion('Tu sesión expiró o ya no es válida. Inicia sesión de nuevo.')
+  const esPasswordIncorrecta = datos?.detalles?.codigo === CODIGO_PASSWORD_INCORRECTA
+  if (respuesta.status === 401 && !publica && !esPasswordIncorrecta) alPerderSesion('Tu sesión expiró o ya no es válida. Inicia sesión de nuevo.')
   if (respuesta.status === 429) {
     const minutos = minutosDeEspera(respuesta, mensaje)
     const texto = minutos

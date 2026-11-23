@@ -2,6 +2,12 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useSesion } from '../context/useSesion'
 
+const MENSAJE_PENDIENTE = 'Tu cuenta está en revisión; un administrador la aprobará pronto.'
+
+function mensajeDeLogin(error) {
+  return error.status === 403 && error.detalles?.codigo === 'CUENTA_PENDIENTE' ? MENSAJE_PENDIENTE : error.message
+}
+
 export default function Login() {
   const { entrar, aviso } = useSesion()
   const { state } = useLocation()
@@ -17,7 +23,7 @@ export default function Login() {
     try {
       await entrar(email.trim(), password)
     } catch (err) {
-      setError(err.message)
+      setError(mensajeDeLogin(err))
       setEnviando(false)
     }
   }
@@ -58,6 +64,9 @@ export default function Login() {
               className="border border-slate-300 px-3 py-2 focus:outline-none focus:border-accent"
             />
           </label>
+          <Link to="/olvide-password" className="text-sm text-accent font-semibold hover:underline self-start -mt-2">
+            ¿Olvidaste tu contraseña?
+          </Link>
           <button
             type="submit"
             disabled={enviando}

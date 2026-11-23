@@ -3,6 +3,8 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
 import CambiarPassword from './pages/CambiarPassword'
+import OlvidePassword from './pages/OlvidePassword'
+import RestablecerPassword from './pages/RestablecerPassword'
 import Dashboard from './pages/Dashboard'
 import InicioGimnasio from './pages/InicioGimnasio'
 import InicioNutricionista from './pages/InicioNutricionista'
@@ -37,7 +39,7 @@ function SoloConPasswordTemporal() {
   const { usuario } = useSesion()
   if (!usuario) return <Navigate to="/login" replace />
   if (!usuario.debeCambiarPassword) return <Navigate to={inicioDe(usuario)} replace />
-  return <CambiarPassword />
+  return <CambiarPassword forzado />
 }
 
 const INICIOS = { admin: Dashboard, gym: InicioGimnasio, nutricionista: InicioNutricionista, cliente: InicioCliente }
@@ -66,6 +68,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Publica><Login /></Publica>} />
       <Route path="/registro" element={<Publica><Registro /></Publica>} />
+      <Route path="/olvide-password" element={<OlvidePassword />} />
+      <Route path="/restablecer-password" element={<RestablecerPassword />} />
       <Route path="/cambiar-password" element={<SoloConPasswordTemporal />} />
 
       <Route element={<Privada />}>
@@ -77,6 +81,7 @@ export default function App() {
         <Route path="/mis-clientes" element={<SoloRol roles={['nutricionista']}><MisClientes /></SoloRol>} />
         <Route path="/mis-clientes/:id" element={<SoloRol roles={['nutricionista']}><ClienteDetalle /></SoloRol>} />
         <Route path="/mi-ciclo" element={<SoloRol roles={['cliente']}><MiCiclo /></SoloRol>} />
+        <Route path="/cuenta/password" element={<CambiarPassword />} />
         <Route path="/notificaciones" element={<Notificaciones />} />
       </Route>
 

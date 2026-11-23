@@ -9,6 +9,12 @@ export const registrarGimnasio = (datos) =>
 export const registrarNutricionista = (datos) =>
   pedir('/api/auth/registro-nutricionista', { metodo: 'POST', cuerpo: datos, publica: true })
 
+export const olvidePassword = (email) =>
+  pedir('/api/auth/olvide-password', { metodo: 'POST', cuerpo: { email }, publica: true })
+
+export const restablecerPassword = (token, passwordNueva) =>
+  pedir('/api/auth/restablecer-password', { metodo: 'POST', cuerpo: { token, passwordNueva }, publica: true })
+
 export const obtenerUsuario = (id) => pedir(`/api/usuarios/${id}`)
 
 export const cambiarPassword = (passwordActual, passwordNueva) =>
