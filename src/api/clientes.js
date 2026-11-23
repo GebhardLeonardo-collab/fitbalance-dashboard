@@ -9,6 +9,8 @@ export const obtenerCliente = (id) => pedir(`/api/clientes/${id}`)
 export const cambiarFrecuencia = (id, frecuenciaEvaluacion) =>
   pedir(`/api/clientes/${id}`, { metodo: 'PUT', cuerpo: { frecuenciaEvaluacion } })
 
+export const cambiarObjetivo = (id, objetivo) => pedir(`/api/clientes/${id}`, { metodo: 'PUT', cuerpo: { objetivo } })
+
 export const obtenerHistorial = (id) => pedir(`/api/clientes/${id}/historial`)
 
 export const registrarPeso = (id, pesoKg) => pedir(`/api/clientes/${id}/pesos`, { metodo: 'POST', cuerpo: { pesoKg } })

@@ -3,7 +3,8 @@ import Estado from '../components/Estado'
 import GraficaPeso from '../components/GraficaPeso'
 import LineaTiempo from '../components/LineaTiempo'
 import ResumenSeguimiento from '../components/ResumenSeguimiento'
-import { corregirUltimoPeso, listarClientes, registrarPeso } from '../api/clientes'
+import { cambiarObjetivo, corregirUltimoPeso, listarClientes, registrarPeso } from '../api/clientes'
+import { OBJETIVOS } from '../utils/etiquetas'
 import { DIAS_ENTRE_REGISTROS, DIAS_PARA_CORREGIR, aDiaISO, diasEntre, formatearFecha, sumarDias, useHistorial } from '../utils/seguimiento'
 
 const PESO_MINIMO = 30
@@ -25,6 +26,10 @@ export default function MiProgreso() {
   const [enviando, setEnviando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
   const [disponibleServidor, setDisponibleServidor] = useState(null)
+  const [editandoObjetivo, setEditandoObjetivo] = useState(false)
+  const [objetivoElegido, setObjetivoElegido] = useState('')
+  const [guardandoObjetivo, setGuardandoObjetivo] = useState(false)
+  const [errorObjetivo, setErrorObjetivo] = useState(null)
 
   useEffect(() => {
     listarClientes()
@@ -65,6 +70,78 @@ export default function MiProgreso() {
     }
   }
 
+  const objetivoActual = historial?.cliente.objetivoActual ?? null
+
+  function abrirObjetivo() {
+    setObjetivoElegido(objetivoActual ?? '')
+    setErrorObjetivo(null)
+    setEditandoObjetivo(true)
+  }
+
+  async function guardarObjetivo(evento) {
+    evento.preventDefault()
+    if (!objetivoElegido || objetivoElegido === objetivoActual) {
+      setEditandoObjetivo(false)
+      return
+    }
+    setGuardandoObjetivo(true)
+    setErrorObjetivo(null)
+    try {
+      await cambiarObjetivo(perfil.id, objetivoElegido)
+      setEditandoObjetivo(false)
+      setMensaje({ tipo: 'exito', texto: 'Objetivo actualizado.' })
+      recargar()
+    } catch (err) {
+      setErrorObjetivo(err.message)
+    } finally {
+      setGuardandoObjetivo(false)
+    }
+  }
+
+  const bloqueObjetivo = (
+    <div className="bg-white px-6 py-4 shadow-lg">
+      {editandoObjetivo ? (
+        <form onSubmit={guardarObjetivo} className="flex flex-wrap items-end gap-4">
+          <label className="flex flex-col gap-1 text-sm text-navy-900">
+            Nuevo objetivo
+            <select
+              value={objetivoElegido}
+              disabled={guardandoObjetivo}
+              onChange={(evento) => setObjetivoElegido(evento.target.value)}
+              className="border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-accent"
+            >
+              {Object.entries(OBJETIVOS).map(([valor, nombre]) => (
+                <option key={valor} value={valor}>
+                  {nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="submit"
+            disabled={guardandoObjetivo}
+            className="bg-accent hover:bg-accent-light disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 transition-colors"
+          >
+            {guardandoObjetivo ? 'Guardando...' : 'Guardar'}
+          </button>
+          <button
+            type="button"
+            disabled={guardandoObjetivo}
+            onClick={() => setEditandoObjetivo(false)}
+            className="border border-navy-700 text-navy-700 hover:bg-navy-700 hover:text-white disabled:opacity-50 text-sm font-semibold px-4 py-2 transition-colors"
+          >
+            Cancelar
+          </button>
+          {errorObjetivo && <p className="basis-full text-sm text-red-700">{errorObjetivo}</p>}
+        </form>
+      ) : (
+        <button type="button" onClick={abrirObjetivo} className="text-sm font-semibold text-navy-700 hover:text-accent">
+          Cambiar objetivo
+        </button>
+      )}
+    </div>
+  )
+
   const registrar = (evento) => {
     evento.preventDefault()
     ejecutar(registrarPeso, peso, 'Peso registrado.')
@@ -95,6 +172,7 @@ export default function MiProgreso() {
             {pesos.length > 0 ? (
               <>
                 <ResumenSeguimiento historial={historial} />
+                {bloqueObjetivo}
                 <GraficaPeso pesos={pesos} cambiosObjetivo={historial.cambiosObjetivo} />
               </>
             ) : (
