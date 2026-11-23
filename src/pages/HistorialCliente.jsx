@@ -1,10 +1,44 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import Estado from '../components/Estado'
 import GraficaPeso from '../components/GraficaPeso'
 import ResumenSeguimiento from '../components/ResumenSeguimiento'
 import { CICLOS_EN_CURSO, ESTADOS_CICLO, EVALUACIONES } from '../utils/etiquetas'
 import { formatearFecha, useHistorial } from '../utils/seguimiento'
+import { guardarPdfVeredicto } from '../utils/descargas'
+
+function BotonPdf({ ciclo }) {
+  const [descargando, setDescargando] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function descargar() {
+    setDescargando(true)
+    setError(null)
+    try {
+      await guardarPdfVeredicto(ciclo.id, `veredicto-${formatearFecha(ciclo.fechaInicio)}.pdf`)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setDescargando(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        disabled={descargando}
+        onClick={descargar}
+        className="inline-flex items-center gap-1 border border-navy-700 text-navy-700 hover:bg-navy-700 hover:text-white disabled:opacity-50 text-xs font-semibold px-3 py-1.5 transition-colors"
+      >
+        <Download size={14} />
+        {descargando ? 'Descargando...' : 'PDF'}
+      </button>
+      {error && <span className="text-xs text-red-700 max-w-[200px] text-right">{error}</span>}
+    </div>
+  )
+}
 
 export default function HistorialCliente() {
   const { id } = useParams()
@@ -43,6 +77,7 @@ export default function HistorialCliente() {
                       <th className="pb-3 font-semibold">Estado</th>
                       <th className="pb-3 font-semibold">Nutricionista</th>
                       <th className="pb-3 font-semibold">Veredicto</th>
+                      <th className="pb-3" />
                     </tr>
                   </thead>
                   <tbody>
@@ -61,6 +96,7 @@ export default function HistorialCliente() {
                         </td>
                         <td className="py-3 text-slate-600">{ciclo.nutricionista?.nombre ?? '—'}</td>
                         <td className="py-3 text-slate-600">{ciclo.veredicto ? (EVALUACIONES[ciclo.veredicto.evaluacion] ?? ciclo.veredicto.evaluacion) : '—'}</td>
+                        <td className="py-3 text-right">{ciclo.estado === 'evaluado' && <BotonPdf ciclo={ciclo} />}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useState } from 'react'
-import { Camera } from 'lucide-react'
+import { Camera, Download } from 'lucide-react'
 import Estado from '../components/Estado'
 import ConfirmarAccion from '../components/ConfirmarAccion'
 import FotoRegistro from '../components/FotoRegistro'
@@ -8,6 +8,7 @@ import { listarClientes } from '../api/clientes'
 import VeredictoCiclo from '../components/VeredictoCiclo'
 import { enviarCiclo, obtenerCiclo } from '../api/ciclos'
 import { listarRegistros } from '../api/registros'
+import { guardarPdfVeredicto } from '../utils/descargas'
 import { CICLOS_EN_CURSO, ESTADOS_CICLO, TOTAL_REGISTROS, formatearDia } from '../utils/etiquetas'
 
 const DIAS = [1, 2, 3]
@@ -28,6 +29,7 @@ export default function MiCiclo() {
   const [confirmandoEnvio, setConfirmandoEnvio] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
+  const [descargando, setDescargando] = useState(false)
 
   const cargar = useCallback(async (inicial = false) => {
     try {
@@ -57,6 +59,18 @@ export default function MiCiclo() {
       setEnviando(false)
       setConfirmandoEnvio(false)
       cargar()
+    }
+  }
+
+  async function descargarPdf() {
+    setDescargando(true)
+    setMensaje(null)
+    try {
+      await guardarPdfVeredicto(estado.ciclo.id, `veredicto-ciclo-${estado.ciclo.numero}.pdf`)
+    } catch (err) {
+      setMensaje({ tipo: 'error', texto: err.message })
+    } finally {
+      setDescargando(false)
     }
   }
 
@@ -125,6 +139,15 @@ export default function MiCiclo() {
             {estado.veredicto && (
               <div className="mt-6 max-w-xl">
                 <VeredictoCiclo veredicto={estado.veredicto} />
+                <button
+                  type="button"
+                  disabled={descargando}
+                  onClick={descargarPdf}
+                  className="mt-4 flex items-center gap-2 bg-accent hover:bg-accent-light disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 transition-colors"
+                >
+                  <Download size={16} />
+                  {descargando ? 'Descargando...' : 'Descargar PDF'}
+                </button>
               </div>
             )}
 
