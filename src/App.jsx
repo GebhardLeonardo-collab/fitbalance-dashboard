@@ -42,7 +42,7 @@ function SoloConPasswordTemporal() {
   const { usuario } = useSesion()
   if (!usuario) return <Navigate to="/login" replace />
   if (!usuario.debeCambiarPassword) return <Navigate to={inicioDe(usuario)} replace />
-  return <CambiarPassword forzado />
+  return <CambiarPassword />
 }
 
 const INICIOS = { admin: Dashboard, gym: InicioGimnasio, nutricionista: InicioNutricionista, cliente: InicioCliente }
@@ -87,7 +87,6 @@ export default function App() {
         <Route path="/mis-clientes/:id" element={<SoloRol roles={['nutricionista']}><ClienteDetalle /></SoloRol>} />
         <Route path="/mi-ciclo" element={<SoloRol roles={['cliente']}><MiCiclo /></SoloRol>} />
         <Route path="/mi-progreso" element={<SoloRol roles={['cliente']}><MiProgreso /></SoloRol>} />
-        <Route path="/cuenta/password" element={<CambiarPassword />} />
         <Route path="/notificaciones" element={<Notificaciones />} />
       </Route>
 

@@ -1,12 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Handshake, Bell, Inbox, Stethoscope, Users, UserCheck, RefreshCw, User, LogOut, X, KeyRound, ShieldCheck, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, Handshake, Bell, Inbox, Stethoscope, Users, UserCheck, RefreshCw, User, LogOut, X, ShieldCheck, TrendingUp } from 'lucide-react'
 import Particles from './Particles'
 import { useSesion } from '../context/useSesion'
 import { useNoLeidas } from '../utils/useNoLeidas'
 
 const NOTIFICACIONES = { nombre: 'Notificaciones', ruta: '/notificaciones', icono: Bell }
-
-const CAMBIAR_PASSWORD = { nombre: 'Cambiar contraseña', ruta: '/cuenta/password', icono: KeyRound }
 
 const INICIO = { nombre: 'Inicio', ruta: '/', icono: LayoutDashboard }
 
@@ -41,7 +39,7 @@ const estiloFondo = { position: 'absolute', inset: 0, zIndex: -1, pointerEvents:
 export default function Sidebar({ abierto, onCerrar }) {
   const { usuario, cerrarSesion } = useSesion()
   const noLeidas = useNoLeidas()
-  const enlaces = [...(ENLACES_POR_ROL[usuario.rol] ?? [NOTIFICACIONES]), CAMBIAR_PASSWORD]
+  const enlaces = ENLACES_POR_ROL[usuario.rol] ?? [NOTIFICACIONES]
 
   return (
     <>
