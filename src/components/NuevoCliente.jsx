@@ -46,7 +46,7 @@ export default function NuevoCliente({ onCerrar, onCreado }) {
 
   async function enviar(evento) {
     evento.preventDefault()
-    if (!valores.consentimiento) return setError('Debes confirmar que el cliente acepta el tratamiento de sus datos.')
+    if (!valores.consentimiento) return setError('Debes confirmar que el cliente acepta el tratamiento de sus datos y que su seguimiento (peso, objetivo y evaluaciones) se comparta con su nutricionista.')
     const errorFecha = validarFechaNacimiento(valores.fechaNacimiento)
     if (errorFecha) return setError(errorFecha)
     const peso = Number(valores.pesoKg)
@@ -146,7 +146,7 @@ export default function NuevoCliente({ onCerrar, onCreado }) {
             onChange={cambiar('consentimiento')}
             className="mt-0.5 h-4 w-4 accent-accent"
           />
-          El cliente acepta el tratamiento de sus datos
+          El cliente acepta el tratamiento de sus datos y que sus datos de seguimiento (peso, objetivo y evaluaciones) se compartan con el nutricionista que lo atienda.
         </label>
 
         <div className="flex flex-wrap justify-end gap-3 pt-2">

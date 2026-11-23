@@ -17,6 +17,8 @@ import Clientes from './pages/Clientes'
 import MisClientes from './pages/MisClientes'
 import ClienteDetalle from './pages/ClienteDetalle'
 import MiCiclo from './pages/MiCiclo'
+import MiProgreso from './pages/MiProgreso'
+import HistorialCliente from './pages/HistorialCliente'
 import Notificaciones from './pages/Notificaciones'
 import { INICIO_POR_ROL, useSesion } from './context/useSesion'
 
@@ -80,9 +82,11 @@ export default function App() {
         <Route path="/aprobacion-cuentas" element={<SoloRol roles={['admin']}><AprobacionCuentas /></SoloRol>} />
         <Route path="/alianzas" element={<SoloRol roles={['gym', 'nutricionista']}><Alianzas /></SoloRol>} />
         <Route path="/clientes" element={<SoloRol roles={['gym']}><Clientes /></SoloRol>} />
+        <Route path="/clientes/:id/historial" element={<SoloRol roles={['gym']}><HistorialCliente /></SoloRol>} />
         <Route path="/mis-clientes" element={<SoloRol roles={['nutricionista']}><MisClientes /></SoloRol>} />
         <Route path="/mis-clientes/:id" element={<SoloRol roles={['nutricionista']}><ClienteDetalle /></SoloRol>} />
         <Route path="/mi-ciclo" element={<SoloRol roles={['cliente']}><MiCiclo /></SoloRol>} />
+        <Route path="/mi-progreso" element={<SoloRol roles={['cliente']}><MiProgreso /></SoloRol>} />
         <Route path="/cuenta/password" element={<CambiarPassword />} />
         <Route path="/notificaciones" element={<Notificaciones />} />
       </Route>

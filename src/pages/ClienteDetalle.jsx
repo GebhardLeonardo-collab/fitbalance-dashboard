@@ -5,8 +5,10 @@ import Estado from '../components/Estado'
 import RegistrosDelCiclo from '../components/RegistrosDelCiclo'
 import FormularioVeredicto from '../components/FormularioVeredicto'
 import VeredictoCiclo from '../components/VeredictoCiclo'
+import SeguimientoSoloLectura from '../components/SeguimientoSoloLectura'
+import { guardarPdfVeredicto } from '../utils/descargas'
 import { cambiarFrecuencia, obtenerCliente } from '../api/clientes'
-import { descargarPdfVeredicto, obtenerCiclo } from '../api/ciclos'
+import { obtenerCiclo } from '../api/ciclos'
 import { listarRegistros } from '../api/registros'
 import { CICLOS_EN_CURSO, ESTADOS_CICLO, FRECUENCIAS, OBJETIVOS } from '../utils/etiquetas'
 
@@ -65,15 +67,7 @@ export default function ClienteDetalle() {
     setDescargando(true)
     setMensaje(null)
     try {
-      const archivo = await descargarPdfVeredicto(estado.ciclo.id)
-      const url = URL.createObjectURL(archivo)
-      const enlace = document.createElement('a')
-      enlace.href = url
-      enlace.download = `veredicto-ciclo-${estado.ciclo.numero}.pdf`
-      document.body.appendChild(enlace)
-      enlace.click()
-      enlace.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 0)
+      await guardarPdfVeredicto(estado.ciclo.id, `veredicto-ciclo-${estado.ciclo.numero}.pdf`)
     } catch (err) {
       setMensaje({ tipo: 'error', texto: err.message })
     } finally {
@@ -190,6 +184,8 @@ export default function ClienteDetalle() {
                 )}
               </>
             )}
+
+            <SeguimientoSoloLectura clienteId={cliente.id} />
           </div>
         )}
       </Estado>

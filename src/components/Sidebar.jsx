@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Handshake, Bell, Inbox, Stethoscope, Users, UserCheck, RefreshCw, User, LogOut, X, KeyRound, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, Handshake, Bell, Inbox, Stethoscope, Users, UserCheck, RefreshCw, User, LogOut, X, KeyRound, ShieldCheck, TrendingUp } from 'lucide-react'
 import Particles from './Particles'
 import { useSesion } from '../context/useSesion'
 import { useNoLeidas } from '../utils/useNoLeidas'
@@ -19,7 +19,12 @@ const ENLACES_POR_ROL = {
     { nombre: 'Clientes', ruta: '/clientes', icono: Users },
     NOTIFICACIONES,
   ],
-  cliente: [INICIO, { nombre: 'Mi ciclo', ruta: '/mi-ciclo', icono: RefreshCw }, NOTIFICACIONES],
+  cliente: [
+    INICIO,
+    { nombre: 'Mi ciclo', ruta: '/mi-ciclo', icono: RefreshCw },
+    { nombre: 'Mi progreso', ruta: '/mi-progreso', icono: TrendingUp },
+    NOTIFICACIONES,
+  ],
   nutricionista: [
     INICIO,
     { nombre: 'Solicitudes', ruta: '/solicitudes', icono: Inbox },

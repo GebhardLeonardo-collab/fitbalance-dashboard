@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import Estado from '../components/Estado'
 import ConfirmarAccion from '../components/ConfirmarAccion'
@@ -147,7 +148,10 @@ export default function Clientes() {
                         <span className="text-xs text-slate-500">Sin ciclo</span>
                       )}
                     </td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 text-right whitespace-nowrap">
+                      <Link to={`/clientes/${cliente.id}/historial`} className={`${estiloBoton} mr-2 inline-block`}>
+                        Historial
+                      </Link>
                       {!enCurso && (
                         <button type="button" onClick={() => setAAbrir(cliente)} className={estiloBoton}>
                           Abrir ciclo
